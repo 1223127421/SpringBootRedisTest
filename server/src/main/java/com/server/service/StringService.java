@@ -68,8 +68,10 @@ public class StringService {
             item = itemMapper.selectByPrimaryKey(id);
             if (item != null) {
                 stringRedisService.put(id.toString(), objectMapper.writeValueAsString(item));
+            }else{
+                log.info("发生缓存击穿====");
             }
-            log.info("先从mysql中查询出来，然后在放入redis中", item);
+//            log.info("先从mysql中查询出来，然后在放入redis中", item);
         }
         return item;
     }
