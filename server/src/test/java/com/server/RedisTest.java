@@ -77,14 +77,14 @@ public class RedisTest {
         String key = "sb:zset";
         redisTemplate.delete(key);
 
-      ZSetOperations<String,String> zSetOperations=  redisTemplate.opsForZSet();
-      zSetOperations.add(key,"a",2);
-      zSetOperations.add(key,"b",4);
-      zSetOperations.add(key,"c",4);
-      zSetOperations.add(key,"d",1);
+        ZSetOperations<String, String> zSetOperations = redisTemplate.opsForZSet();
+        zSetOperations.add(key, "a", 2);
+        zSetOperations.add(key, "b", 4);
+        zSetOperations.add(key, "c", 4);
+        zSetOperations.add(key, "d", 1);
 
         System.out.println(zSetOperations.size(key));
-        System.out.println(zSetOperations.range(key,0,10));
+        System.out.println(zSetOperations.range(key, 0, 10));
 
 
     }
