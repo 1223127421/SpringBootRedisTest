@@ -244,6 +244,13 @@
             <version>1.5.7.RELEASE</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.58</version>
+        </dependency>
+
         <!-- 引入热部署jar包 devtools-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

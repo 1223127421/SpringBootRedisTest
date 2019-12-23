@@ -1,79 +1,66 @@
 package com.server.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.model.entity.Item;
 import com.model.mapper.ItemMapper;
-import com.server.controller.StringController;
-import com.server.redis.StringRedisService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.server.constants.Constant;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Date;
 
 /**
- * @Author admin
- * @Date 2019/11/23 23:46
  * @Description
  */
 @Service
 public class StringService {
 
-    private static final Logger log = LoggerFactory.getLogger(StringController.class);
-
     @Autowired
     private ItemMapper itemMapper;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private RedisTemplate redisTemplate;
 
-    @Autowired
-    private StringRedisService stringRedisService;
-
-    //如果在添加到缓存时失败，则回滚，保证缓存和数据库双写的一致性
     @Transactional(rollbackFor = Exception.class)
-    public Integer addItem(Item item) throws Exception {
-        item.setCreateTime(new Date());
+    public void add(Item item) {
         item.setId(null);
+        item.setCreateTime(new Date());
         itemMapper.insertSelective(item);
-
-        Integer id = item.getId();
-        //保证缓存和数据库双写的一致性，如果数据库添加失败，则不添加到缓存中
-        if (id > 0) {
-            //前缀+商品id作为key
-            //序列化
-            stringRedisService.put(id.toString(), objectMapper.writeValueAsString(item));
+        //保证缓存和数据库的双写一致性
+        if (item.getId() > 0) {
+            ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+            String key = Constant.RedisStrinItemPrefix + item.getId().toString();
+            valueOperations.set(key, JSON.toJSONString(item));
         }
-        return id;
     }
 
+    //先从缓存中查询，如果插不到，则再从数据库查询，并把查到的数据再次放入缓存中
     public Item getById(Integer id) throws Exception {
         Item item = null;
-        if (id == null) {
-            return null;
-        }
-        //判断key是否存在，如果key存在，则直接从redis中获取数据
-        if (stringRedisService.exists(id.toString())) {
-            String result = stringRedisService.get(id.toString()).toString();
-            log.info("redis中取出的value:" + result);
-            if (!StringUtils.isEmpty(result)) {
-                //反序列化
-                item = objectMapper.readValue(result, Item.class);
-            }
+        String key = Constant.RedisStrinItemPrefix + id;
+        ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
+        if (redisTemplate.hasKey(key)) {
+            item = JSON.parseObject(valueOperations.get(key), new TypeReference<Item>() {
+            });
         } else {
-            //如果key不存在，说明redis中没有数据，则先从mysql中查询出来，然后在放入redis中
             item = itemMapper.selectByPrimaryKey(id);
             if (item != null) {
-                stringRedisService.put(id.toString(), objectMapper.writeValueAsString(item));
-            }else{
-                log.info("发生缓存击穿====");
+                valueOperations.set(key, JSON.toJSONString(item));
             }
-//            log.info("先从mysql中查询出来，然后在放入redis中", item);
         }
         return item;
+
     }
 
+    @Transactional(rollbackFor = Exception.class)
+    public void del(Integer id) {
+        Integer result = itemMapper.deleteByPrimaryKey(id);
+        if (result > 0) {
+            redisTemplate.delete(Constant.RedisStrinItemPrefix + id.toString());
+        }
+    }
 }

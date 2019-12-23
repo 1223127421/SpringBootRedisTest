@@ -67,11 +67,11 @@ public class RedisTest {
 //        System.out.println("" + rightStr);
 
         //修改下标为0的元素
-        listOperations.set(key, 0, "admin");
-        System.out.println("当前列表中下标为0的元素：" + listOperations.index(key, 0));
+//        listOperations.set(key, 0, "admin");
+//        System.out.println("当前列表中下标为0的元素：" + listOperations.index(key, 0));
 
         //删除下表为0，且值是admin的元素
-        listOperations.remove(key, 0, "admin");
+//        listOperations.remove(key, 0, "admin");
 
         //获取list中所有元素
         List<String> result = listOperations.range(key, 0, listOperations.size(key));

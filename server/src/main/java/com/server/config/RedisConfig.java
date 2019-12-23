@@ -12,8 +12,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 /**
  * @EnableCaching：开启缓存（注解生效的）
  * @ redis的操作组件自定义注入配置
- * @Author admin
- * @Date 2019/11/23 18:21
  * @Description
  */
 @Configuration

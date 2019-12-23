@@ -10,6 +10,7 @@ import java.util.Date;
 @Data
 @ToString
 public class Item implements Serializable{
+
     private Integer id;
 
     @NotBlank(message = "商品编码不能为空！")

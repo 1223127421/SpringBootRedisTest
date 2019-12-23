@@ -6,66 +6,54 @@ import com.model.entity.Notice;
 import com.model.entity.Product;
 import com.server.service.ListService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @Author admin
- * @Date 2019/11/24 21:50
  * @Description
  */
-
 @RestController
-@RequestMapping("list")
+@RequestMapping("/list")
 public class ListController extends AbstractController {
 
     @Autowired
     private ListService listService;
 
-    @RequestMapping(value = "put", method = RequestMethod.POST)
-    public BaseResponse put(@RequestBody Product product, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return new BaseResponse(StatusCode.InvalidParams);
-        }
+    @RequestMapping("add")
+    public BaseResponse add(@RequestBody Product product) {
         BaseResponse response = new BaseResponse(StatusCode.Success);
         try {
-            listService.addPro(product);
+            listService.add(product);
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("", e.fillInStackTrace());
+            log.error("失败：", e.fillInStackTrace());
             response = new BaseResponse(StatusCode.Fail.getCode(), e.getMessage());
         }
         return response;
     }
 
-    @RequestMapping(value = "get", method = RequestMethod.GET)
+    @RequestMapping("getByUserId")
     public BaseResponse getByUserId(Integer userId) {
         BaseResponse response = new BaseResponse(StatusCode.Success);
         try {
             response.setData(listService.getByUserId(userId));
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("", e.fillInStackTrace());
+            log.error("失败：", e.fillInStackTrace());
             response = new BaseResponse(StatusCode.Fail.getCode(), e.getMessage());
         }
         return response;
     }
 
-    @RequestMapping(value = "putNotice", method = RequestMethod.POST)
-    public BaseResponse putNotice(@RequestBody @Validated Notice notice, BindingResult bindingResult) {
+    @RequestMapping("addNotice")
+    public BaseResponse add(@RequestBody Notice notice) {
         BaseResponse response = new BaseResponse(StatusCode.Success);
         try {
-            listService.putNotice(notice);
-
+            listService.addNotice(notice);
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("", e.fillInStackTrace());
+            log.error("失败：", e.fillInStackTrace());
             response = new BaseResponse(StatusCode.Fail.getCode(), e.getMessage());
         }
         return response;
     }
+
 }

@@ -11,12 +11,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * @Author admin
- * @Date 2019/11/24 21:56
  * @Description
  */
 @Service
@@ -32,52 +30,44 @@ public class ListService {
     private RedisTemplate redisTemplate;
 
     @Transactional(rollbackFor = Exception.class)
-    public void addPro(Product product) {
-        if (product == null) {
-            return;
-        }
+    public void add(Product product) {
         product.setId(null);
         productMapper.insertSelective(product);
-
-        if (product.getId() > 0) {
-            ListOperations<String, Product> operations = redisTemplate.opsForList();
-            operations.leftPush(Constant.RedisListPrefix + product.getUserId(), product);
+        if (product.getId() != null) {
+            ListOperations<String, Product> listOperations = redisTemplate.opsForList();
+            String key = Constant.RedisListProductPrefix + product.getUserId();
+            listOperations.leftPush(key, product);
         }
-
     }
 
     public List<Product> getByUserId(Integer userId) {
-        List<Product> list = new ArrayList<>();
+        List<Product> list = null;
+        String key = Constant.RedisListProductPrefix + userId;
         ListOperations<String, Product> listOperations = redisTemplate.opsForList();
-        String key = Constant.RedisListPrefix + userId;
-//        list = listOperations.range(key, 0, listOperations.size(key));
-//        Collections.reverse(list);
-
-        Product product = listOperations.rightPop(key);
-        while (true) {
-            if (product == null) {
-                break;
+        if (redisTemplate.hasKey(key)) {
+            //倒叙
+            list = listOperations.range(key, 0, listOperations.size(key));
+//            Collections.reverse(list);
+        } else {
+            list = productMapper.listProductsByUId(userId);
+            if (list != null) {
+                listOperations.leftPushAll(key, list);
             }
-            list.add(product);
-            product = listOperations.rightPop(key);
         }
-
         return list;
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void putNotice(Notice notice) {
-        if (notice == null) {
-            return;
-        }
+    public void addNotice(Notice notice) {
         notice.setId(null);
         noticeMapper.insertSelective(notice);
-        if (notice.getId() > 0) {
-            //存到消息队列中
-            //applicationEvent&Listener  Rabbitmq  jms
+        if (notice.getId() != null) {
+            // 塞入List列表中(队列)，准备被拉取异步通知至不同的商户的邮箱 -
+            // applicationEvent&Listener;Rabbitmq;jms
             ListOperations<String, Notice> listOperations = redisTemplate.opsForList();
-            listOperations.leftPush(Constant.RedisListNoticePrefix, notice);
+            String key = Constant.RedisListNoticePrefix;
+            listOperations.leftPush(key, notice);
         }
-
     }
+
 }

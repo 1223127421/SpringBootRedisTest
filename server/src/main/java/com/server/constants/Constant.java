@@ -7,8 +7,8 @@ package com.server.constants;
  */
 public class Constant {
 
-    public static final String RedisStringPrefix = "SpringBootRedis:String";
-    public static final String RedisListPrefix = "SpringBootRedis:List";
+    public static final String RedisStrinItemPrefix = "SpringBootRedis:String:Item";
+    public static final String RedisListProductPrefix = "SpringBootRedis:List:Product";
     public static final String RedisListNoticePrefix = "SpringBootRedis:List:Notice";
     public static final String RedisPhoneFarePrefix = "SpringBootRedis:ZSet:Phone";
     public static final String RedisPhoneFarePrefix2 = "SpringBootRedis:ZSet:Phone2";
